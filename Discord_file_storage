@@ -51,38 +51,40 @@ int main(){
                 getline(cin, path);
 
                 if (filecheck(path)){
-                    ifstream disc_files_check("discord_files.txt");
-                    if (!disc_files_check){
-                        cout<<"Error reading or creating discord_files.txt!\n";
-                        exit(0);
-                    }
-
-                    //Get names of already uploaded files
-                    string line;
-                    bool save_next=false;
-                    vector<string> file_names;
-                    while (getline(disc_files_check, line)){
-                        if (save_next){
-                            file_names.push_back(line);
+                    if (filecheck("discord_files.txt")){
+                        ifstream disc_files_check("discord_files.txt");
+                        if (!disc_files_check){
+                            cout<<"Error reading discord_files.txt!\n";
+                            exit(0);
                         }
-                        if (line.empty()){
-                            save_next=true;
+    
+                        //Get names of already uploaded files
+                        string line;
+                        bool save_next=false;
+                        vector<string> file_names;
+                        while (getline(disc_files_check, line)){
+                            if (save_next){
+                                file_names.push_back(line);
+                            }
+                            if (line.empty()){
+                                save_next=true;
+                            }
+                            else{
+                                save_next=false;
+                            }
                         }
-                        else{
-                            save_next=false;
+                        disc_files_check.close();
+    
+                        bool uploaded=false;
+                        for (int i=0; i<file_names.size(); i++){ //check if file has already been uploaded and would cause naming conflicts if done again
+                            if (path==file_names[i]){
+                                cout<<"File already uploaded\n";
+                                uploaded=true;
+                            }
                         }
-                    }
-                    disc_files_check.close();
-
-                    bool uploaded=false;
-                    for (int i=0; i<file_names.size(); i++){ //check if file has already been uploaded and would cause naming conflicts if done again
-                        if (path==file_names[i]){
-                            cout<<"File already uploaded\n";
-                            uploaded=true;
+                        if (uploaded){
+                            continue;
                         }
-                    }
-                    if (uploaded){
-                        continue;
                     }
 
                     upfile_info.name=path;
@@ -142,7 +144,7 @@ int main(){
                     cout<<"Upload failed: key in discord_files.txt is corrupt!\n";
                     exit(0);
                 }
-                if (msg_ids_and_index.size()/2!=0){ //should be even as msg id and index always come as pairs
+                if (msg_ids_and_index.size()%2!=0){ //should be even as msg id and index always come as pairs
                     cout<<"Upload failed: message data in discord_files.txt is corrupt!\n";
                     exit(0);
                 }
@@ -338,6 +340,7 @@ void decrypt(string path, string path_encrypted, file_info &downfile_info){
         decrypted_path=path+"_new";
     }
 
+    ofstream decrypted(decrypted_path, ios::binary);
     if (!decrypted){
         cout<<"Error creating "<<decrypted_path<<"!\n";
         exit(0);
