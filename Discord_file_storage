@@ -387,7 +387,7 @@ void split(const string &path, const size_t &TEN_MB, file_info &upfile_info){
     condition_variable cv;
     atomic<bool> uploaded{false};
 
-    bot.on_ready([&bot, &mtx, &cv, &upfile_info, &uploaded, &index, TEN_MB, size, &upfile, up_root, &temp_files](const dpp::ready_t& event) {
+    bot.on_ready([&bot, &mtx, &cv, &upfile_info, &uploaded, &index, TEN_MB, &size, &upfile, up_root, &temp_files](const dpp::ready_t& event) {
     while (size>0){ //loops until no data left
         //takes 10 MB chunk until last bit 
         size_t chunk_size=min(TEN_MB, size);
