@@ -355,6 +355,8 @@ void decrypt(string path, string path_encrypted, file_info &downfile_info){
 
     remove(path_encrypted.c_str());
 
+    cout<<"Downloaded content at "<<decrypted_path<<'\n';
+
     return;
 }
 
