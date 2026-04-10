@@ -1,6 +1,5 @@
 //save bot token to DISCORD_TOKEN env var with 'export DISCORD_TOKEN="token"'
 //save discord channel ID to DISCORD_CHANNEL env var with 'export DISCORD_CHANNEL="uint64 channel id"'
-//channel ID in file_info struct
 //compile with: g++ discord_file_upload.cpp -o discord_file_upload -ldpp -lcurl
 #include <iostream>
 #include <fstream>
