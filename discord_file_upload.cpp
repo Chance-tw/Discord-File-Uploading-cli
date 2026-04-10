@@ -208,7 +208,7 @@ bool readandvalidate(file_info &file, bool download){
         }
 
         if (savenext){
-            msg_ids_and_index.push_back(stol(line));
+            msg_ids_and_index.push_back(stoull(line));
         }
 
         if (line==file.key){
