@@ -474,6 +474,8 @@ void disc_down(file_info &downfile_info){
     for (int i=0; i<temp_files.size(); i++){
         remove(temp_files[i].c_str());
     }
+
+    exit(0);
 }
 
 void decrypt(file_info &downfile_info){
