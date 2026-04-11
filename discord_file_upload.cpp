@@ -378,6 +378,8 @@ void split(const size_t &TEN_MB, file_info &upfile_info){
 
     //removes the encrypted version
     remove((upfile_info.name+"_encrypted").c_str());
+
+    return;
 }
 
 void disc_down(file_info &downfile_info){
