@@ -466,7 +466,7 @@ void disc_down(file_info &downfile_info){
     bot.start(dpp::st_return); //doesnt block this thread
 
     while(!done){ //waits for files to be downloaded
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     bot.shutdown();
 
