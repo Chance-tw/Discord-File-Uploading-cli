@@ -189,7 +189,10 @@ int main(){
 
 bool filecheck(std::string file_path){
     std::ifstream file_check(file_path);
-    return file_check.good();
+    if(std::filesystem::is_regular_file(file_path)){
+        return file_check.good();
+    }
+    return false;
 }
 
 bool readandvalidate(file_info &file, bool download){
