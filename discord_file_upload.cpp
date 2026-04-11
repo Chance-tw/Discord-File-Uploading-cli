@@ -299,12 +299,12 @@ void split(const size_t &TEN_MB, file_info &upfile_info){
     dpp::cluster bot(token); //defines a bot cluster/lambda using the token
     //bot.on_log(dpp::utility::cout_logger()); //for bot logs displayed in terminal
 
-    bot.on_ready([&bot, &upfile_info, TEN_MB, &size, &upfile, up_root, &temp_files](const dpp::ready_t& event){
-        int index=0; //index numbering for the files getting uploaded
+    std::mutex mtxlock; //creates a mutex to lock the threads
+    std::condition_variable cvnotifier; //creates a condition var so it can notify when to switch the mutex ownership
+    std::atomic<bool> uploaded{false}; //bool that gets switched for the condition var to notify
 
-        std::mutex mtxlock; //creates a mutex to lock the threads
-        std::condition_variable cvnotifier; //creates a condition var so it can notify when to switch the mutex ownership
-        std::atomic<bool> uploaded{false}; //bool that gets switched for the condition var to notify
+    bot.on_ready([&bot, &upfile_info, TEN_MB, &size, &upfile, up_root, &temp_files, &mtxlock, &cvnotifier, &uploaded](const dpp::ready_t& event){
+        int index=0; //index numbering for the files getting uploaded
 
         while (size>0){ //loops until no data left 
             size_t chunk_size=std::min(TEN_MB, size); //takes either a chunk of ten MB or whatver is left of size
@@ -400,16 +400,17 @@ void disc_down(file_info &downfile_info){
     dpp::cluster bot(token); //defines a bot cluster/lambda using the token
     //bot.on_log(dpp::utility::cout_logger()); //for bot logs
 
-    bool cont=false; //for busy loop to stop until file is downloaded
+    std::atomic<bool> cont=false; //for busy loop to stop until file is downloaded
+    std::atomic<bool> done{false}; //for busy loop to know when to shut bot dow
 
-    bot.on_ready([&bot, &downfile_info, &encrypted, &cont, &temp_files](const dpp::ready_t&){
+    bot.on_ready([&bot, &downfile_info, &encrypted, &cont, &done, &temp_files](const dpp::ready_t&){
         const dpp::snowflake channel_id=downfile_info.channel_id; //set channel id to download from
         for (int i=0; i<downfile_info.msg_ids.size(); i++){
             cont=false; //set cont back to false on each iteration
 
             dpp::snowflake message_id=downfile_info.msg_ids[i]; //desired message to be downloaded
 
-            bot.message_get(message_id, channel_id, [&bot, &encrypted, &downfile_info, i, &cont, &temp_files](const dpp::confirmation_callback_t& event){
+            bot.message_get(message_id, channel_id, [&bot, &encrypted, &downfile_info, i, &cont, &done, &temp_files](const dpp::confirmation_callback_t& event){
                     //find message and its info
                     auto msg=std::get<dpp::message>(event.value);
                     auto attach = msg.attachments[0];
@@ -419,7 +420,7 @@ void disc_down(file_info &downfile_info){
                     std::cout<<"Downloading: "<<file_name<<" from "<<file_url<<'\n';
 
                     //download the message
-                    bot.request(file_url, dpp::m_get, [file_name, &encrypted, &downfile_info, i, &cont, &temp_files](const dpp::http_request_completion_t& r){
+                    bot.request(file_url, dpp::m_get, [file_name, &encrypted, &downfile_info, i, &cont, &done, &temp_files](const dpp::http_request_completion_t& r){
                         if (r.status==200){ //200==successful
                             //writes thr message body to the file
                             std::ofstream out(file_name, std::ios::binary);
@@ -444,6 +445,7 @@ void disc_down(file_info &downfile_info){
                             if (i==downfile_info.msg_ids.size()-1){
                                 encrypted.close();
                                 decrypt(downfile_info);
+                                done=true;
                             }
                         } 
                         else{ //https status not 200 so it failed
@@ -461,7 +463,12 @@ void disc_down(file_info &downfile_info){
         bot.shutdown();
     });
 
-    bot.start(dpp::st_wait);
+    bot.start(dpp::st_return); //doesnt block this thread
+
+    while(!done){ //waits for files to be downloaded
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    bot.shutdown();
 
     //mainly removed not just after download since cont only waits for file to be downloaded and idk may not finish appending before continuing
     for (int i=0; i<temp_files.size(); i++){
