@@ -9,4 +9,5 @@ To get information on how to create the bot for this program: https://discordpy.
 Ensure the bot has perms in the server/channel it will operate in
 
 The cli can be called from anywhere with "discordfiles-cli -flags" if moved to /usr/bin/discordfiles-cli
+   
     Note it can be called also with ./path/to/discordfiles-cli -flags
